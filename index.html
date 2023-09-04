@@ -22,7 +22,7 @@
             bottom: 0vw;
             left: 0vw;
             height: 4vw;
-            width: 6vw;
+            width: 10vw;
             padding-left: 1vw;
             color: beige;
             font-size: 3vw;
@@ -33,7 +33,7 @@
             bottom: 10%;
             left: 0vw;
             height: 4vw;
-            width: 6vw;
+            width: 10vw;
             padding-left: 1vw;
             color: beige;
             font-size: 3vw;
@@ -126,6 +126,8 @@
                     <br />
                     LEFT MOUSE - Fire
 
+                    <div id="message">pleas wait til map lod</div>
+
                 </p>
             </div>
         </div>
@@ -162,8 +164,14 @@
         var gun;
 
         var raycaster = new THREE.Raycaster();
+        var mess=document.getElementById('message');
+        var lod = false;
+        const lodingmanager = new THREE.LoadingManager();
 
-
+        lodingmanager.onLoad = function () {
+            lod = true;
+            mess.style.display = "none";
+        };
 
         var renderer = new THREE.WebGLRenderer({
             alpha: true,
@@ -327,7 +335,9 @@
         var playButton = document.getElementById('playButton');
 
         playButton.addEventListener('click', function () {
-            controls.lock();
+            if (lod) {
+                controls.lock();
+            }
         });
 
         controls.addEventListener('lock', function () {
@@ -351,7 +361,7 @@
 
         scene.add(controls.getObject());
 
-        var ambientLight = new THREE.AmbientLight(0xffffff, 3);
+        var ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
 
 
@@ -378,11 +388,13 @@
         };
 
         document.addEventListener('mousedown', (event) => {
-            if (event.button == 0) {
-                if (bullcount > 0) {
-                    tommyGun.shout(raycaster.ray.direction.clone());
-                    bullcount--;
-                    bul.innerHTML = bullcount;
+            if (controls.isLocked) {
+                if (event.button == 0) {
+                    if (bullcount > 0) {
+                        tommyGun.shout(raycaster.ray.direction.clone());
+                        bullcount--;
+                        bul.innerHTML = '🔫' + bullcount;
+                    }
                 }
             }
         });
@@ -454,7 +466,7 @@
         var helth = [];
         var bull = [];
 
-        var loader = new GLTFLoader();
+        var loader = new GLTFLoader(lodingmanager);
         loader.load('battle_rifle_animated.glb', function (gltf) {
             gltf.scene.scale.set(0.003, 0.003, 0.003)
 
@@ -481,11 +493,11 @@
             });
 
         const life = document.getElementById('health');
-        life.innerHTML = tommyGun.helth;
+        life.innerHTML = '❤️' + tommyGun.helth;
         const soc = document.getElementById('score');
         soc.innerHTML = score;
         const bul = document.getElementById('bull');
-        bul.innerHTML = bullcount;
+        bul.innerHTML = '🔫' + bullcount;
         var loader1 = new GLTFLoader();
         function animate() {
             requestAnimationFrame(animate);
@@ -518,6 +530,9 @@
                     }
                 } else {
                     controls.speed = 0;
+                }
+                if (tommyGun.helth <= 0) {
+                    gameover();
                 }
                 if (fram % (rate * 2) == 0) {
                     if (rate > (rateval / 6)) {
@@ -581,7 +596,7 @@
                         wolk[h].wlak(new THREE.Vector3(-wolk[h].position.x + tommyGun.position.x, -wolk[h].position.y + tommyGun.position.y, -wolk[h].position.z + tommyGun.position.z))
                         if (detectcolision(tommyGun, wolk[h])) {
                             tommyGun.helth -= 0.1;
-                            life.innerHTML = Math.round(tommyGun.helth);
+                            life.innerHTML = '❤️' + Math.round(tommyGun.helth);
                         }
                         if (zombie[h]) {
                             zombie[h].position.set(wolk[h].position.x, wolk[h].buttom, wolk[h].position.z);
@@ -600,7 +615,7 @@
                         } else {
                             tommyGun.helth = 100;
                         }
-                        life.innerHTML = Math.round(tommyGun.helth);
+                        life.innerHTML = '❤️' + Math.round(tommyGun.helth);
                         scene.remove(helth[h]);
                         helth.splice(h, 1);
                     }
@@ -611,7 +626,7 @@
                         bullcount += 30;
                         scene.remove(bull[h]);
                         bull.splice(h, 1);
-                        bul.innerHTML = bullcount;
+                        bul.innerHTML = '🔫' + bullcount;
                     }
                 }
                 tommyGun.update(ground);
@@ -655,6 +670,11 @@
 
         function random(min, max) {
             return Math.random() * (max - min) + min;
+        }
+
+        function gameover() {
+            const url = './win.html';
+            window.location.href = `${url}?score=${score}`;
         }
     </script>
 
